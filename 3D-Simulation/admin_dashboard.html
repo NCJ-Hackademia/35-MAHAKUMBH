@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Drone Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online { background-color: #4CAF50; }
+        .status-offline { background-color: #f44336; }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .map-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .map {
+            width: 100%;
+            height: 600px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .world-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .drone-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid white;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+
+        .drone-d1 { background-color: #ff6b6b; }
+        .drone-d2 { background-color: #4ecdc4; }
+        .drone-d3 { background-color: #45b7d1; }
+
+        .human-marker {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #ffd93d;
+            border: 3px solid #ffffff;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+
+        .human-found {
+            background-color: #6bcf7f !important;
+        }
+
+        .region-boundary {
+            position: absolute;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+        }
+
+        .region-d1 {
+            top: 50%;
+            left: 0;
+            width: 50%;
+            height: 50%;
+        }
+
+        .region-d2 {
+            top: 50%;
+            right: 0;
+            width: 50%;
+            height: 50%;
+        }
+
+        .region-d3 {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .panel h3 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .drone-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .drone-info h4 {
+            margin-bottom: 5px;
+        }
+
+        .drone-info p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .human-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .human-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        .human-found-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ffd93d;
+        }
+
+        .human-found-indicator.found {
+            background-color: #6bcf7f;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .connection-status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .connected {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid #4CAF50;
+        }
+
+        .disconnected {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid #f44336;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .map {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛰️ Multi-Drone Admin Dashboard</h1>
+        <p>Real-time monitoring of distributed search and rescue operation</p>
+    </div>
+
+    <div class="main-container">
+        <div class="map-container">
+            <h3>🌍 World Map</h3>
+            <div class="map">
+                <div class="world-grid"></div>
+                
+                <!-- Region boundaries -->
+                <div class="region-boundary region-d1"></div>
+                <div class="region-boundary region-d2"></div>
+                <div class="region-boundary region-d3"></div>
+                
+                <!-- Drone markers will be added dynamically -->
+                <div id="drone-markers"></div>
+                
+                <!-- Human markers will be added dynamically -->
+                <div id="human-markers"></div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="panel">
+                <div id="connection-status" class="connection-status disconnected">
+                    <span class="status-indicator status-offline"></span>
+                    Disconnected from server
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-drones">0</div>
+                        <div class="stat-label">Active Drones</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="humans-found">0</div>
+                        <div class="stat-label">Humans Found</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>🛰️ Drone Status</h3>
+                <div id="drone-list">
+                    <div class="drone-info">
+                        <div>
+                            <h4>D1 - Bottom Left</h4>
+                            <p>Status: <span class="status-indicator status-offline"></span>Offline</p>
+                            <p>Position: [0, 0, 0]</p>
+                        </div>
+                    </div>
+                    <div class="drone-info">
+                        <div>
+                            <h4>D2 - Bottom Right</h4>
+                            <p>Status: <span class="status-indicator status-offline"></span>Offline</p>
+                            <p>Position: [0, 0, 0]</p>
+                        </div>
+                    </div>
+                    <div class="drone-info">
+                        <div>
+                            <h4>D3 - Top Region</h4>
+                            <p>Status: <span class="status-indicator status-offline"></span>Offline</p>
+                            <p>Position: [0, 0, 0]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>👥 Human Status</h3>
+                <div style="margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; font-size: 12px;">
+                    <strong>Map Legend:</strong><br>
+                    🔴 <span style="color: #ff6b6b;">Red dots</span> = D1 (Bottom Left)<br>
+                    🔵 <span style="color: #054064;">Blue dots</span> = D2 (Bottom Right)<br>
+                    🔷 <span style="color: #45d163;">Green dots</span> = D3 (Top Region)<br>
+                    <small>World: 800x800 units</small>
+                </div>
+                <div class="human-list" id="human-list">
+                    <!-- Human items will be added dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let websocket;
+        let worldState = {
+            drones: {},
+            humans: [],
+            regions: {},
+            world_size: 400
+        };
+
+        // Initialize WebSocket connection
+        function initializeWebSocket() {
+            const serverIP = new URLSearchParams(window.location.search).get('server') || 'localhost';
+            const wsUrl = `ws://${serverIP}:8765`;
+            
+            websocket = new WebSocket(wsUrl);
+            
+            websocket.onopen = () => {
+                console.log('🔗 Connected to server as admin');
+                updateConnectionStatus(true);
+                
+                // Register as admin
+                websocket.send(JSON.stringify({
+                    type: "register",
+                    client_type: "admin"
+                }));
+            };
+            
+            websocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleServerMessage(data);
+            };
+            
+            websocket.onclose = () => {
+                console.log('❌ WebSocket connection closed');
+                updateConnectionStatus(false);
+                // Reconnect after 3 seconds
+                setTimeout(initializeWebSocket, 3000);
+            };
+            
+            websocket.onerror = (error) => {
+                console.error('❌ WebSocket error:', error);
+                updateConnectionStatus(false);
+            };
+        }
+
+        function handleServerMessage(data) {
+            switch (data.type) {
+                case "world_state":
+                    worldState = data;
+                    updateDashboard();
+                    break;
+                    
+                case "positions":
+                    worldState.drones = data.drones;
+                    updateDronePositions();
+                    break;
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            if (connected) {
+                statusElement.className = 'connection-status connected';
+                statusElement.innerHTML = '<span class="status-indicator status-online"></span>Connected to server';
+            } else {
+                statusElement.className = 'connection-status disconnected';
+                statusElement.innerHTML = '<span class="status-indicator status-offline"></span>Disconnected from server';
+            }
+        }
+
+        function updateDashboard() {
+            updateDroneStatus();
+            updateHumanStatus();
+            updateStats();
+            updateDronePositions();
+            updateHumanPositions();
+        }
+
+        function updateDroneStatus() {
+            const droneList = document.getElementById('drone-list');
+            droneList.innerHTML = '';
+            
+            const droneConfigs = [
+                { id: 'D1', name: 'D1 - Bottom Left', region: 'Bottom Left' },
+                { id: 'D2', name: 'D2 - Bottom Right', region: 'Bottom Right' },
+                { id: 'D3', name: 'D3 - Top Region', region: 'Top Region' }
+            ];
+            
+            droneConfigs.forEach(config => {
+                const drone = worldState.drones[config.id];
+                const isOnline = drone !== undefined;
+                
+                const droneInfo = document.createElement('div');
+                droneInfo.className = 'drone-info';
+                droneInfo.innerHTML = `
+                    <div>
+                        <h4>${config.name}</h4>
+                        <p>Status: <span class="status-indicator ${isOnline ? 'status-online' : 'status-offline'}"></span>${isOnline ? 'Online' : 'Offline'}</p>
+                        <p>Position: [${isOnline ? drone[0].toFixed(1) : '0'}, ${isOnline ? drone[1].toFixed(1) : '0'}, ${isOnline ? drone[2].toFixed(1) : '0'}]</p>
+                    </div>
+                `;
+                droneList.appendChild(droneInfo);
+            });
+        }
+
+        function updateHumanStatus() {
+            const humanList = document.getElementById('human-list');
+            humanList.innerHTML = '';
+            
+            // Debug: Count humans per region
+            const regionCounts = {};
+            worldState.humans.forEach(human => {
+                const region = human.region;
+                regionCounts[region] = (regionCounts[region] || 0) + 1;
+            });
+            
+            console.log('🔍 Admin Dashboard Human Counts:', regionCounts);
+            console.log('🔍 Total humans:', worldState.humans.length);
+            
+            worldState.humans.forEach(human => {
+                const humanItem = document.createElement('div');
+                humanItem.className = 'human-item';
+                humanItem.innerHTML = `
+                    <div>
+                        <strong>${human.name}</strong>
+                        <div style="font-size: 0.8em; opacity: 0.8;">Region: ${human.region} - [${human.position[0].toFixed(1)}, ${human.position[2].toFixed(1)}]</div>
+                    </div>
+                    <div class="human-found-indicator ${human.found ? 'found' : ''}"></div>
+                `;
+                humanList.appendChild(humanItem);
+            });
+        }
+
+        function updateStats() {
+            const activeDrones = Object.keys(worldState.drones).length;
+            const humansFound = worldState.humans.filter(h => h.found).length;
+            
+            document.getElementById('total-drones').textContent = activeDrones;
+            document.getElementById('humans-found').textContent = humansFound;
+        }
+
+        function updateDronePositions() {
+            const markersContainer = document.getElementById('drone-markers');
+            markersContainer.innerHTML = '';
+            
+            Object.entries(worldState.drones).forEach(([droneId, position]) => {
+                const marker = document.createElement('div');
+                marker.className = `drone-marker drone-${droneId.toLowerCase()}`;
+                
+                // Convert world coordinates to map coordinates (800x800 world to 100% map)
+                const mapX = ((position[0] + 400) / 800) * 100;
+                // Flip Y-axis: what was bottom becomes top, top becomes bottom
+                const mapY = 100 - ((position[2] + 400) / 800) * 100;
+                
+                marker.style.left = `${mapX}%`;
+                marker.style.top = `${mapY}%`;
+                
+                // Add tooltip
+                marker.title = `${droneId}: [${position[0].toFixed(1)}, ${position[1].toFixed(1)}, ${position[2].toFixed(1)}]`;
+                
+                markersContainer.appendChild(marker);
+            });
+        }
+
+        function updateHumanPositions() {
+            const markersContainer = document.getElementById('human-markers');
+            markersContainer.innerHTML = '';
+            
+            console.log('🔍 Updating human positions on map:', worldState.humans.length, 'humans');
+            
+            worldState.humans.forEach(human => {
+                const marker = document.createElement('div');
+                marker.className = `human-marker ${human.found ? 'human-found' : ''}`;
+                
+                // Convert world coordinates to map coordinates (800x800 world to 100% map)
+                // Ensure coordinates are within bounds
+                const x = Math.max(-400, Math.min(400, human.position[0]));
+                const z = Math.max(-400, Math.min(400, human.position[2]));
+                const mapX = ((x + 400) / 800) * 100;
+                // Flip Y-axis: what was bottom becomes top, top becomes bottom
+                const mapY = 100 - ((z + 400) / 800) * 100;
+                
+                marker.style.left = `${mapX}%`;
+                marker.style.top = `${mapY}%`;
+                
+                // Add tooltip with coordinates
+                marker.title = `${human.name} (${human.found ? 'Found' : 'Not Found'}) - [${human.position[0].toFixed(1)}, ${human.position[2].toFixed(1)}]`;
+                
+                // Add different colors for each region
+                let regionColor = '#ffd93d'; // Default yellow
+                if (human.region === 'D1') regionColor = '#ff6b6b'; // Red for D1
+                else if (human.region === 'D2') regionColor = '#054064'; // Blue for D2
+                else if (human.region === 'D3') regionColor = '#45d163'; // Green for D3
+                
+                marker.style.backgroundColor = regionColor;
+                
+                // Add a number label to make it more visible
+                marker.innerHTML = `<div style="position: absolute; top: -20px; left: -8px; background: white; color: black; font-size: 11px; font-weight: bold; padding: 2px 4px; border-radius: 3px; white-space: nowrap; border: 1px solid #333;">${human.name.split('_')[1]}</div>`;
+                
+                console.log(`📍 ${human.name} (${human.region}): [${human.position[0].toFixed(1)}, ${human.position[2].toFixed(1)}] -> map: [${mapX.toFixed(1)}%, ${mapY.toFixed(1)}%]`);
+                
+                markersContainer.appendChild(marker);
+                
+                // Debug: Check if marker was added
+                console.log(`✅ Added marker for ${human.name} at [${mapX.toFixed(1)}%, ${mapY.toFixed(1)}%]`);
+            });
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            initializeWebSocket();
+            
+            // Request updates every 5 seconds
+            setInterval(() => {
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    websocket.send(JSON.stringify({ type: "request_update" }));
+                }
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
