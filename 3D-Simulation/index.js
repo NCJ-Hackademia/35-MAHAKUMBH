@@ -78,10 +78,10 @@ const setScene = async () => {
   scene             = new THREE.Scene();
   scene.background  = new THREE.Color(0xf5e6d3);
 
-  flyingIn  = true;
+  flyingIn  = false;
   camY      = 160,
   camZ      = -190;
-  camera    = new THREE.PerspectiveCamera(60, sizes.width / sizes.height, 1, 300);
+  camera    = new THREE.PerspectiveCamera(60, sizes.width / sizes.height, 1, 800); // Changed 300 to 400
   camera.position.set(0, camY, camZ);
   
   renderer = new THREE.WebGLRenderer({
@@ -201,18 +201,18 @@ const setFog = () => {
     gpuTier.tier === 1
       ? 20
       : gpuTier.tier === 2
-      ? 60
+      ? 20
       : gpuTier.tier === 3
-      ? 70
+      ? 20
       : 20
   const far = 
     gpuTier.tier === 1
-      ? 72
+      ? 130
       : gpuTier.tier === 2
-      ? 100
+      ? 130
       : gpuTier.tier === 3
-      ? 115
-      : 72
+      ? 130
+      : 130
 
   scene.fog = new THREE.Fog(0xf5e6d3, near, far);
 
@@ -235,12 +235,12 @@ const setTerrainValues = () => {
 
   const centerTileFromTo = 
     gpuTier.tier === 1
-      ? 15
-      : gpuTier.tier === 2
       ? 25
+      : gpuTier.tier === 2
+      ? 35
       : gpuTier.tier === 3
-      ? 30
-      : 15
+      ? 40
+      : 40
 
   centerTile = {
     xFrom:  -centerTileFromTo,
@@ -281,7 +281,7 @@ const setTerrainValues = () => {
 const setClouds = async () => {
 
   clouds                = []
-  const amountOfClouds  = 10;
+  const amountOfClouds  = 2;
 
   const createClouds = async () => {
     
@@ -783,16 +783,16 @@ const keyUp = (event) => {
 
 const determineMovement = () => {
 
-  character.translateZ(doubleSpeed ? 1 : 0.4);
+  // The line has been REMOVED from here
 
   if(flyingIn) return;
 
   if(activeKeysPressed.includes(38)) { // up arrow
+    character.translateZ(doubleSpeed ? 1 : 0.4); // <-- PASTE IT HERE
+
     if(character.position.y < 90) {
       character.position.y += charPosYIncrement;
       if(charPosYIncrement < 0.3) charPosYIncrement += 0.02;
-      if(charNeck.rotation.x > -0.6) charNeck.rotation.x -= 0.06;
-      if(charBody.rotation.x > -0.4) charBody.rotation.x -= 0.04;
     }
     else {
       if(charNeck.rotation.x < 0 || charBody.rotation.x < 0) {
@@ -936,16 +936,16 @@ const listenTo = () => {
   window.addEventListener('resize', resize.bind(this));
   window.addEventListener('keydown', keyDown.bind(this));
   window.addEventListener('keyup', keyUp.bind(this));
-  document.querySelector('.hex-music')
-    .addEventListener('click', () => updateMusicVolume());
-  document.querySelector('.hex-info')
-    .addEventListener('click', () => toggleInfoModal());
-  document.querySelector('.info-close')
-    .addEventListener('click', () => toggleInfoModal(false));
-  document.querySelector('.hex-speed')
-    .addEventListener('click', () => toggleDoubleSpeed());
-  document.querySelector('.hex-birds-eye')
-    .addEventListener('click', () => toggleBirdsEyeView());
+  // document.querySelector('.hex-music')
+  //   .addEventListener('click', () => updateMusicVolume());
+  // document.querySelector('.hex-info')
+  //   .addEventListener('click', () => toggleInfoModal());
+  // document.querySelector('.info-close')
+  //   .addEventListener('click', () => toggleInfoModal(false));
+  // document.querySelector('.hex-speed')
+  //   .addEventListener('click', () => toggleDoubleSpeed());
+  // document.querySelector('.hex-birds-eye')
+  //   .addEventListener('click', () => toggleBirdsEyeView());
 
 }
 
@@ -1011,17 +1011,17 @@ const updateMusicVolume = () => {
 const pauseIconAnimation = (pause = true) => {
 
   if(pause) {
-    document.querySelector('.hex-music').classList.add('js-loading');
-    document.querySelector('.hex-info').classList.add('js-loading');
-    document.querySelector('.hex-speed').classList.add('js-loading');
-    document.querySelector('.hex-birds-eye').classList.add('js-loading');
+    // document.querySelector('.hex-music').classList.add('js-loading');
+    // // document.querySelector('.hex-info').classList.add('js-loading');
+    // document.querySelector('.hex-speed').classList.add('js-loading');
+    // document.querySelector('.hex-birds-eye').classList.add('js-loading');
     return;
   }
 
-  document.querySelector('.hex-music').classList.remove('js-loading');
-  document.querySelector('.hex-info').classList.remove('js-loading');
-  document.querySelector('.hex-speed').classList.remove('js-loading');
-  document.querySelector('.hex-birds-eye').classList.remove('js-loading');
+  // document.querySelector('.hex-music').classList.remove('js-loading');
+  // // document.querySelector('.hex-info').classList.remove('js-loading');
+  // document.querySelector('.hex-speed').classList.remove('js-loading');
+  // document.querySelector('.hex-birds-eye').classList.remove('js-loading');
 
 }
 
