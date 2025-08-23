@@ -390,30 +390,35 @@ const setCharAnimation = () => {
 }
 
 const setCharacter = async () => {
-
   const model = await gltfLoader.loadAsync('assets/bird/scene.gltf');
-  const geo   = model.scene.getObjectByName('Cube001_0').geometry.clone();
-  character   = model.scene;
+  character = model.scene;
 
-  character.position.set(0, 25, 0);
-  character.scale.set(1.3, 1.3, 1.3);
+  // Adjust scale and position
+  character.scale.set(3, 3, 3);
+  character.position.set(0, 40, 0);
 
-  charPosYIncrement     = 0;
-  charRotateYIncrement  = 0;
-  charRotateYMax        = 0.01;
-
-  mixer         = new THREE.AnimationMixer(character);
+  // Set up propeller animation
+  mixer = new THREE.AnimationMixer(character);
   charAnimation = mixer.clipAction(model.animations[0]);
+  charAnimation.play();
 
-  charNeck  = character.getObjectByName('Neck_Armature');
-  charBody  = character.getObjectByName('Armature_rootJoint');
+  // Update node references based on your GLTF structure
+  charBody = character.getObjectByName('helicopter_box_0');
+  charNeck = character.getObjectByName('Plane_0');
 
-  geo.computeBoundsTree();
+  // Enable shadows
+  character.traverse(child => {
+    if(child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+  // In setCharacter()
+  charPosYIncrement = 0;
+  charRotateYIncrement = 0;
+  charRotateYMax = 0.03; // Faster rotation for drone
   scene.add(character);
-
-  return;
-
-}
+};
 
 const setGrass = async () => {
 
