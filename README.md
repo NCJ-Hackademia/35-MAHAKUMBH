@@ -45,6 +45,39 @@ We’re committed to the hackathon values of **innovation, integrity, and collab
 
 ## 🗃️ Overview
 
+![Flowchart](https://github.com/NCJ-Hackademia/35-MAHAKUMBH/blob/main/RL_TRAINING/assets/flowchart.jpeg)
+
+## 🏗️ System Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Drone D1      │    │   Drone D2      │    │   Drone D3      │
+│  (Laptop 1)     │    │  (Laptop 2)     │    │  (Laptop 3)     │
+└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
+          │                      │                      │
+          └──────────────────────┼──────────────────────┘
+                                 │
+                    ┌─────────────▼─────────────┐
+                    │    Multi-Drone Server     │
+                    │      (Laptop 4)           │
+                    │                           │
+                    │ • WebSocket Hub           │
+                    │ • Position Coordination   │
+                    │ • Human Detection Logic   │
+                    │ • Region Management       │
+                    └─────────────┬─────────────┘
+                                  │
+                    ┌─────────────▼─────────────┐
+                    │    Admin Dashboard        │
+                    │      (Laptop 4)           │
+                    │                           │
+                    │ • Real-time Monitoring    │
+                    │ • World Map View          │
+                    │ • Drone Status Tracking   │
+                    │ • Human Discovery Log     │
+                    └───────────────────────────┘
+```
+
 This project implements an autonomous multi-drone system for search and rescue operations using reinforcement learning (RL). The system trains drone swarms to efficiently search areas, detect victims, and optimize rescue routes while maintaining stable flight patterns. The project consists of:
 
 ![Multi Drone Training](https://github.com/NCJ-Hackademia/35-MAHAKUMBH/blob/main/RL_TRAINING/assets/multi.png)
