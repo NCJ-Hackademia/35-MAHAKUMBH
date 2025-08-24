@@ -8,9 +8,6 @@ A distributed system where 3 drones work together to search for humans across a 
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Drone D1      │    │   Drone D2      │    │   Drone D3      │
 │  (Laptop 1)     │    │  (Laptop 2)     │    │  (Laptop 3)     │
-│                 │    │                 │    │                 │
-│ Region: Bottom  │    │ Region: Bottom  │    │ Region: Top     │
-│ Left            │    │ Right           │    │ (Full Width)    │
 └─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
           │                      │                      │
           └──────────────────────┼──────────────────────┘
@@ -35,25 +32,6 @@ A distributed system where 3 drones work together to search for humans across a 
                     │ • Human Discovery Log     │
                     └───────────────────────────┘
 ```
-
-## 🌍 World Layout
-
-The world is a 400x400 grid divided into 3 non-overlapping regions:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Region D3 (Top)                      │
-│              (Full Width: -200 to 200)                  │
-│              (Z: 0 to 200)                              │
-├─────────────────────────┬───────────────────────────────┤
-│      Region D1          │         Region D2             │
-│    (Bottom Left)        │       (Bottom Right)          │
-│  (X: -200 to 0)         │      (X: 0 to 200)            │
-│  (Z: -200 to 0)         │      (Z: -200 to 0)           │
-└─────────────────────────┴───────────────────────────────┘
-```
-
-Each region contains 3 randomly placed humans (9 total).
 
 ## 🚀 Quick Start
 
@@ -226,58 +204,3 @@ http://localhost:3000/admin_dashboard.html?server=localhost
 - Human detection radius: 50 units
 - World size: 400x400 units
 - Maximum concurrent connections: 10
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**1. Connection Failed**
-- Check if server is running
-- Verify IP address is correct
-- Ensure laptops are on same network
-- Check firewall settings
-
-**2. Drones Not Moving**
-- Verify WebSocket connection is established
-- Check browser console for errors
-- Ensure character/drone object is initialized
-
-**3. Humans Not Spawning**
-- Check if region assignment is correct
-- Verify human positions are within terrain bounds
-- Check browser console for loading errors
-
-**4. Admin Dashboard Not Updating**
-- Verify admin connection to server
-- Check if drones are sending position updates
-- Refresh page and reconnect
-
-### Debug Commands
-
-**Server Logs:**
-```bash
-python multi_drone_server.py
-# Look for connection and message logs
-```
-
-**Client Debug:**
-```javascript
-// In browser console
-console.log('Drone ID:', droneId);
-console.log('Server IP:', SERVER_IP);
-console.log('WebSocket State:', websocket.readyState);
-```
-
-## 🚀 Future Enhancements
-
-1. **AI-Powered Search**: Implement intelligent search algorithms
-2. **Dynamic Region Assignment**: Automatic region redistribution
-3. **Mission Planning**: Pre-planned search patterns
-4. **Data Logging**: Persistent mission logs and analytics
-5. **Mobile Support**: Admin dashboard for mobile devices
-6. **Scalability**: Support for more than 3 drones
-7. **Advanced Visualization**: 3D admin interface with Three.js
-
-## 📝 License
-
-This project is part of the Autonomous Search and Rescue Drone system.
