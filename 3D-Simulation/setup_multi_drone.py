@@ -118,7 +118,7 @@ def print_instructions(local_ip, client_urls):
     print("- Check firewall settings allow port 8765")
     print("- Verify server IP is accessible from other laptops")
     
-    print("\n📖 For detailed instructions, see: README_MULTI_DRONE.md")
+    print("\n📖 For detailed instructions, see: README.md")
 
 def main():
     """Main setup function"""
