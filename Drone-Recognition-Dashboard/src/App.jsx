@@ -1,26 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Drone, 
-  Users, 
-  MapPin, 
-  Clock, 
-  Activity, 
   Battery, 
-  Wifi, 
   Signal, 
   Camera, 
   Thermometer, 
   Mic, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle,
   Play,
   Pause,
-  ArrowLeft, // New import
-  ArrowRight, // New import
-  Settings,
-  BarChart3,
-  Shield,
+  ArrowLeft,
+  ArrowRight,
   Navigation,
   Zap
 } from 'lucide-react';
@@ -31,8 +20,8 @@ const DroneRescueDashboard = () => {
   const [selectedDetection, setSelectedDetection] = useState(0);
   const [isLive, setIsLive] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [zoomedImage, setZoomedImage] = useState(null); // New state for image zoom
-  const audioRef = useRef(null); // useRef to hold the audio object
+  const [zoomedImage, setZoomedImage] = useState(null);
+  const audioRef = useRef(null);
 
   // Update time every second
   useEffect(() => {
@@ -81,7 +70,7 @@ const DroneRescueDashboard = () => {
         {
           id: 1,
           type: "visual",
-          method: "AI Human Recognition",
+          method: "Image Recognition",
           timestamp: "2024-01-15 14:23:15",
           coordinates: { lat: 28.7041, lng: 77.1025 },
           confidence: 0.94,
@@ -138,7 +127,7 @@ const DroneRescueDashboard = () => {
       id: 3,
       name: "Hawk-3",
       callsign: "HWK-03",
-      status: "standby",
+      status: "active",
       battery: 45,
       signal: 72,
       altitude: 0,
@@ -179,7 +168,7 @@ const DroneRescueDashboard = () => {
         {
           id: 8, // New unique ID
           type: "visual",
-          method: "AI Human Recognition",
+          method: "Image Recognition",
           timestamp: "2024-01-15 14:18:05",
           coordinates: { lat: 28.7039, lng: 77.1041 },
           confidence: 0.95,
@@ -214,17 +203,7 @@ const DroneRescueDashboard = () => {
     }
   };
 
-  const getBatteryColor = (battery) => {
-    if (battery >= 80) return 'text-emerald-500';
-    if (battery >= 50) return 'text-yellow-500';
-    return 'text-red-500';
-  };
 
-  const getSignalColor = (signal) => {
-    if (signal >= 80) return 'text-emerald-500';
-    if (signal >= 60) return 'text-yellow-500';
-    return 'text-red-500';
-  };
 
   const nextDetection = () => {
     if (selectedDetection < currentDetections.length - 1) {
@@ -244,11 +223,7 @@ const DroneRescueDashboard = () => {
     }
   };
 
-  const totalDetections = Object.values(drones).reduce((sum, drone) => sum + drone.detections.length, 0);
-  const activeDrones = Object.values(drones).filter(drone => drone.status === 'active').length;
-  const avgConfidence = Object.values(drones)
-    .flatMap(drone => drone.detections)
-    .reduce((sum, detection) => sum + detection.confidence, 0) / totalDetections;
+
 
   return (
     <div className="dashboard" style={{ minHeight: '100vh', backgroundColor: '#1a1a2e' }}>
@@ -273,10 +248,6 @@ const DroneRescueDashboard = () => {
           </div>
           
           <div className="header-right">
-            <div className="time-display">
-              <Clock className="time-icon" />
-              <span>{currentTime.toLocaleTimeString()}</span>
-            </div>
             <div className="date-display">
               {currentTime.toLocaleDateString()}
             </div>
@@ -308,24 +279,7 @@ const DroneRescueDashboard = () => {
                       </div>
                     </div>
                     
-                    <div className="drone-metrics">
-                      <div className="metric">
-                        <Battery className={`metric-icon ${getBatteryColor(drone.battery)}`} />
-                        <span>{drone.battery}%</span>
-                      </div>
-                      <div className="metric">
-                        <Signal className={`metric-icon ${getSignalColor(drone.signal)}`} />
-                        <span>{drone.signal}%</span>
-                      </div>
-                      <div className="metric">
-                        <Navigation className="metric-icon" />
-                        <span>{drone.altitude}m</span>
-                      </div>
-                      <div className="metric">
-                        <Zap className="metric-icon" />
-                        <span>{drone.speed} km/h</span>
-                      </div>
-                    </div>
+
                     
                     <div className="drone-detections">
                       <span>{drone.detections.length} detection{drone.detections.length !== 1 ? 's' : ''}</span>
@@ -355,23 +309,16 @@ const DroneRescueDashboard = () => {
                     disabled={selectedDetection === 0}
                     className="nav-btn"
                   >
-                    <ArrowLeft className="w-4 h-4" /> {/* Changed from RotateCcw */}
+                    <ArrowLeft className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={nextDetection} 
                     disabled={selectedDetection === currentDetections.length - 1}
                     className="nav-btn"
                   >
-                    <ArrowRight className="w-4 h-4" /> {/* Changed from RotateCcw */}
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
-                
-                <button 
-                  onClick={() => setIsLive(!isLive)}
-                  className={`live-btn ${isLive ? 'live' : 'offline'}`}
-                >
-                  {isLive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </button>
               </div>
             </div>
             
@@ -406,59 +353,12 @@ const DroneRescueDashboard = () => {
                     
                     {currentDetectionData.audioFile && (
                       <div className="audio-container">
-                        <button onClick={handleAudioToggle} className="audio-toggle-btn">
+                        <button onClick={handleAudioToggle} className={`audio-toggle-btn ${isPlaying ? 'playing' : ''}`}>
                           {isPlaying ? <Pause className="audio-icon" /> : <Play className="audio-icon" />}
                         </button>
                         <span>{isPlaying ? 'Playing Audio...' : 'Audio Detection Active'}</span>
                       </div>
                     )}
-                  </div>
-                  
-                  <div className="detection-details">
-                    <div className="detail-section">
-                      <h4>Detection Details</h4>
-                      <div className="detail-grid">
-                        <div className="detail-item">
-                          <Clock className="detail-icon" />
-                          <div>
-                            <span className="detail-label">Timestamp</span>
-                            <span className="detail-value">{currentDetectionData.timestamp}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="detail-item">
-                          <MapPin className="detail-icon" />
-                          <div>
-                            <span className="detail-label">Coordinates</span>
-                            <span className="detail-value">
-                              {currentDetectionData.coordinates.lat.toFixed(6)}, {currentDetectionData.coordinates.lng.toFixed(6)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="detail-section">
-                      <h4>Drone Status</h4>
-                      <div className="drone-status-grid">
-                        <div className="status-item">
-                          <Battery className={`status-icon ${getBatteryColor(currentDrone.battery)}`} />
-                          <span>Battery: {currentDrone.battery}%</span>
-                        </div>
-                        <div className="status-item">
-                          <Signal className={`status-icon ${getSignalColor(currentDrone.signal)}`} />
-                          <span>Signal: {currentDrone.signal}%</span>
-                        </div>
-                        <div className="status-item">
-                          <Navigation className="status-icon" />
-                          <span>Altitude: {currentDrone.altitude}m</span>
-                        </div>
-                        <div className="status-item">
-                          <Zap className="status-icon" />
-                          <span>Speed: {currentDrone.speed} km/h</span>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
