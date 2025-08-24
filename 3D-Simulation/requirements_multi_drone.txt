@@ -1,0 +1,14 @@
+# Multi-Drone System Requirements
+# Install with: pip install -r requirements_multi_drone.txt
+
+# WebSocket server for multi-drone communication
+websockets>=11.0.3
+
+# Async support (usually included with Python 3.7+)
+asyncio
+
+# Optional: For better performance
+uvloop>=0.17.0
+
+# Optional: For development and debugging
+aiohttp>=3.8.0
