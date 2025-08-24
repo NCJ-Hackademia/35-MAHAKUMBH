@@ -97,10 +97,122 @@
             text-align: center;
         }
 
+        /* Mini World Map Styles */
+        #mini-world-map {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 350px;
+            height: 262px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            z-index: 100;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .mini-map-grid {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            width: 300px;
+            height: 212px;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 10px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .mini-drone-marker {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 3px solid white;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            z-index: 15;
+            display: none; /* Hidden by default, shown when positioned */
+        }
+
+        .mini-drone-d1 { background-color: #ff6b6b; }
+        .mini-drone-d2 { background-color: #4ecdc4; }
+        .mini-drone-d3 { background-color: #45b7d1; }
+
+        .mini-human-marker {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ffd93d;
+            border: 2px solid #ffffff;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .mini-human-found {
+            background-color: #6bcf7f !important;
+        }
+
+
+
+        .mini-map-title {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .mini-map-toggle {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .mini-map-toggle:hover {
+            background: rgba(0, 0, 0, 0.9);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .mini-map-hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+
 
 
         .status-online {
             background-color: rgba(76, 175, 80, 0.8) !important;
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
     </style>
 </head>
@@ -132,11 +244,32 @@
         <div id="connection-status">Connecting...</div>
         <div id="control-mode">🤖 Auto</div>
 
+        <!-- Mini World Map -->
+        <div id="mini-world-map">
+            <div class="mini-map-grid"></div>
+            
+
+            
+            <!-- Drone Markers -->
+            <div class="mini-drone-marker mini-drone-d1" id="mini-drone-d1"></div>
+            <div class="mini-drone-marker mini-drone-d2" id="mini-drone-d2"></div>
+            <div class="mini-drone-marker mini-drone-d3" id="mini-drone-d3"></div>
+            
+            <!-- Human Markers (will be populated by JavaScript) -->
+            <div id="mini-human-markers"></div>
+            
+
+        </div>
+
     </div>
 
     <div id="zone-joystick" class="joystick"></div>
 
     <script>
+        // World map configuration - match admin dashboard exactly
+        const WORLD_SIZE = 800; // 800x800 world
+        const MAP_SIZE = 350; // Mini map size in pixels (increased for extra space)
+        
         // Update drone info display
         function updateDroneInfo() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -147,12 +280,178 @@
             droneInfo.innerHTML = `
                 🛰️ Drone: ${droneId}<br>
                 🌐 Server: ${serverIp}<br>
-                📡 Port: 8765
+                📡 Port: 8765<br>
             `;
+        }
+
+        // Convert world coordinates to mini map coordinates - EXACTLY like admin dashboard
+        function worldToMapCoords(x, z) {
+            // Convert world coordinates to map coordinates (800x800 world to grid area)
+            // Ensure coordinates are within bounds
+            const clampedX = Math.max(-400, Math.min(400, x));
+            const clampedZ = Math.max(-400, Math.min(400, z));
+            
+            // EXACTLY like admin dashboard: ((x + 400) / 800) * 100
+            const mapXPercent = ((clampedX + 400) / 800) * 100;
+            // EXACTLY like admin dashboard: 100 - ((z + 400) / 800) * 100
+            const mapYPercent = 100 - ((clampedZ + 400) / 800) * 100;
+            
+            // Convert percentages to pixels within the grid area
+            const GRID_LEFT = 25; // Grid starts at 25px from left
+            const GRID_TOP = 25;  // Grid starts at 25px from top
+            const GRID_WIDTH = 300;  // Grid width (300px)
+            const GRID_HEIGHT = 212; // Grid height (212px)
+            
+            const mapX = GRID_LEFT + (mapXPercent / 100) * GRID_WIDTH;
+            const mapY = GRID_TOP + (mapYPercent / 100) * GRID_HEIGHT;
+            
+            return { x: mapX, y: mapY };
+        }
+
+        // Update mini world map with drone positions and humans - EXACTLY like admin dashboard
+        function updateMiniWorldMap(worldData) {
+            if (!worldData) return;
+            
+            // Get current drone ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentDroneId = urlParams.get('drone_id') || 'D1';
+            
+            // Update drone positions - EXACTLY like admin dashboard
+            if (worldData.drones) {
+                console.log(`🌍 Mini map: Found ${Object.keys(worldData.drones).length} drones:`, Object.keys(worldData.drones));
+                console.log(`🌍 Full drone data:`, worldData.drones);
+                
+                Object.keys(worldData.drones).forEach(droneId => {
+                    const drone = worldData.drones[droneId];
+                    const marker = document.getElementById(`mini-drone-${droneId.toLowerCase()}`);
+                    console.log(`🌍 Looking for drone marker: mini-drone-${droneId.toLowerCase()}, found:`, marker);
+                    console.log(`🌍 Drone data for ${droneId}:`, drone);
+                    
+                    // Handle different drone data formats
+                    let position = null;
+                    if (Array.isArray(drone)) {
+                        // drone is directly [x, y, z] array
+                        position = drone;
+                    } else if (drone && drone.position) {
+                        // drone is object with position property
+                        position = drone.position;
+                    } else if (drone && Array.isArray(drone)) {
+                        // drone is already position array
+                        position = drone;
+                    }
+                    
+                    if (marker && position && position.length >= 3) {
+                        const coords = worldToMapCoords(position[0], position[2]);
+                        marker.style.left = `${coords.x}px`;
+                        marker.style.top = `${coords.y}px`;
+                        marker.style.display = 'block';
+                        console.log(`🌍 Set drone ${droneId} position to:`, coords, `from world coords: [${position[0]}, ${position[2]}]`);
+                        
+                        // Highlight current drone with a pulsing effect
+                        if (droneId === currentDroneId) {
+                            marker.style.boxShadow = '0 0 8px 2px rgba(255, 255, 255, 0.8)';
+                            marker.style.animation = 'pulse 2s infinite';
+                            console.log(`🌍 Highlighting current drone: ${droneId}`);
+                        } else {
+                            marker.style.boxShadow = 'none';
+                            marker.style.animation = 'none';
+                        }
+                    } else {
+                        console.log(`🌍 No marker found for drone ${droneId} or no position data. Position:`, position);
+                    }
+                });
+            }
+            
+            // Update human markers - EXACTLY like admin dashboard
+            if (worldData.humans) {
+                const humanMarkersContainer = document.getElementById('mini-human-markers');
+                humanMarkersContainer.innerHTML = '';
+                
+                console.log(`🌍 Mini map: Found ${worldData.humans.length} humans`);
+                
+                worldData.humans.forEach(human => {
+                    const marker = document.createElement('div');
+                    marker.className = `mini-human-marker ${human.found ? 'mini-human-found' : ''}`;
+                    
+                    // Convert world coordinates to map coordinates (800x800 world to MAP_SIZE pixels)
+                    const coords = worldToMapCoords(human.position[0], human.position[2]);
+                    
+                    marker.style.left = `${coords.x}px`;
+                    marker.style.top = `${coords.y}px`;
+                    marker.title = `${human.name} (${human.found ? 'Found' : 'Not Found'}) - [${human.position[0].toFixed(1)}, ${human.position[2].toFixed(1)}]`;
+                    
+                    // Use same color for all humans
+                    marker.style.backgroundColor = '#ffd93d'; // Yellow for all humans
+                    
+                    console.log(`🌍 Human ${human.name}: world [${human.position[0].toFixed(1)}, ${human.position[2].toFixed(1)}] -> map [${coords.x.toFixed(1)}, ${coords.y.toFixed(1)}]`);
+                    
+                    humanMarkersContainer.appendChild(marker);
+                });
+            }
         }
 
         // Initialize display
         updateDroneInfo();
+
+        // WebSocket connection for mini world map updates
+        let miniMapWebSocket;
+        
+        function initializeMiniMapWebSocket() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const serverIp = urlParams.get('server') || 'localhost';
+            const wsUrl = `ws://${serverIp}:8765`;
+            
+            miniMapWebSocket = new WebSocket(wsUrl);
+            
+            miniMapWebSocket.onopen = () => {
+                console.log('🌍 Mini map WebSocket connected');
+                // Register as admin client to receive world state updates
+                miniMapWebSocket.send(JSON.stringify({
+                    type: "register",
+                    client_type: "admin"
+                }));
+            };
+            
+            miniMapWebSocket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('🌍 Mini map received message type:', data.type);
+                    
+                    if (data.type === "world_state") {
+                        // Store world state and update map
+                        window.miniMapWorldState = data;
+                        updateMiniWorldMap(data);
+                    } else if (data.type === "positions") {
+                        // Update drone positions
+                        if (window.miniMapWorldState) {
+                            window.miniMapWorldState.drones = data.drones;
+                            updateMiniWorldMap(window.miniMapWorldState);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error parsing mini map data:', error);
+                }
+            };
+            
+            miniMapWebSocket.onclose = () => {
+                console.log('🌍 Mini map WebSocket closed, reconnecting...');
+                setTimeout(initializeMiniMapWebSocket, 3000);
+            };
+            
+            miniMapWebSocket.onerror = (error) => {
+                console.error('🌍 Mini map WebSocket error:', error);
+            };
+        }
+
+        // Initialize mini map WebSocket when page loads
+        initializeMiniMapWebSocket();
+        
+        // Request updates every 5 seconds like admin dashboard
+        setInterval(() => {
+            if (miniMapWebSocket && miniMapWebSocket.readyState === WebSocket.OPEN) {
+                miniMapWebSocket.send(JSON.stringify({ type: "request_update" }));
+            }
+        }, 5000);     
     </script>
 
     <script src="index.js" type="module"></script>

@@ -268,7 +268,7 @@
                 
                 <!-- Drone markers will be added dynamically -->
                 <div id="drone-markers"></div>
-
+                
                 <!-- Human markers will be added dynamically -->
                 <div id="human-markers"></div>
             </div>
@@ -280,7 +280,7 @@
                     <span class="status-indicator status-offline"></span>
                     Disconnected from server
                 </div>
-
+                
                 <div class="stats">
                     <div class="stat-item">
                         <div class="stat-number" id="total-drones">0</div>
@@ -342,32 +342,32 @@
         function initializeWebSocket() {
             const serverIP = new URLSearchParams(window.location.search).get('server') || 'localhost';
             const wsUrl = `ws://${serverIP}:8765`;
-
+            
             websocket = new WebSocket(wsUrl);
-
+            
             websocket.onopen = () => {
                 console.log('🔗 Connected to server as admin');
                 updateConnectionStatus(true);
-
+                
                 // Register as admin
                 websocket.send(JSON.stringify({
                     type: "register",
                     client_type: "admin"
                 }));
             };
-
+            
             websocket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 handleServerMessage(data);
             };
-
+            
             websocket.onclose = () => {
                 console.log('❌ WebSocket connection closed');
                 updateConnectionStatus(false);
                 // Reconnect after 3 seconds
                 setTimeout(initializeWebSocket, 3000);
             };
-
+            
             websocket.onerror = (error) => {
                 console.error('❌ WebSocket error:', error);
                 updateConnectionStatus(false);
@@ -380,7 +380,7 @@
                     worldState = data;
                     updateDashboard();
                     break;
-
+                    
                 case "positions":
                     worldState.drones = data.drones;
                     updateDronePositions();
@@ -410,17 +410,17 @@
         function updateDroneStatus() {
             const droneList = document.getElementById('drone-list');
             droneList.innerHTML = '';
-
+            
             const droneConfigs = [
                 { id: 'D1', name: 'D1 - Bottom Left', region: 'Bottom Left' },
                 { id: 'D2', name: 'D2 - Bottom Right', region: 'Bottom Right' },
                 { id: 'D3', name: 'D3 - Top Region', region: 'Top Region' }
             ];
-
+            
             droneConfigs.forEach(config => {
                 const drone = worldState.drones[config.id];
                 const isOnline = drone !== undefined;
-
+                
                 const droneInfo = document.createElement('div');
                 droneInfo.className = 'drone-info';
                 droneInfo.innerHTML = `
@@ -437,17 +437,17 @@
         function updateHumanStatus() {
             const humanList = document.getElementById('human-list');
             humanList.innerHTML = '';
-
+            
             // Debug: Count humans per region
             const regionCounts = {};
             worldState.humans.forEach(human => {
                 const region = human.region;
                 regionCounts[region] = (regionCounts[region] || 0) + 1;
             });
-
+            
             console.log('🔍 Admin Dashboard Human Counts:', regionCounts);
             console.log('🔍 Total humans:', worldState.humans.length);
-
+            
             worldState.humans.forEach(human => {
                 const humanItem = document.createElement('div');
                 humanItem.className = 'human-item';
@@ -465,7 +465,7 @@
         function updateStats() {
             const activeDrones = Object.keys(worldState.drones).length;
             const humansFound = worldState.humans.filter(h => h.found).length;
-
+            
             document.getElementById('total-drones').textContent = activeDrones;
             document.getElementById('humans-found').textContent = humansFound;
         }
@@ -473,22 +473,22 @@
         function updateDronePositions() {
             const markersContainer = document.getElementById('drone-markers');
             markersContainer.innerHTML = '';
-
+            
             Object.entries(worldState.drones).forEach(([droneId, position]) => {
                 const marker = document.createElement('div');
                 marker.className = `drone-marker drone-${droneId.toLowerCase()}`;
-
+                
                 // Convert world coordinates to map coordinates (800x800 world to 100% map)
                 const mapX = ((position[0] + 400) / 800) * 100;
                 // Flip Y-axis: what was bottom becomes top, top becomes bottom
                 const mapY = 100 - ((position[2] + 400) / 800) * 100;
-
+                
                 marker.style.left = `${mapX}%`;
                 marker.style.top = `${mapY}%`;
-
+                
                 // Add tooltip
                 marker.title = `${droneId}: [${position[0].toFixed(1)}, ${position[1].toFixed(1)}, ${position[2].toFixed(1)}]`;
-
+                
                 markersContainer.appendChild(marker);
             });
         }
@@ -496,13 +496,13 @@
         function updateHumanPositions() {
             const markersContainer = document.getElementById('human-markers');
             markersContainer.innerHTML = '';
-
+            
             console.log('🔍 Updating human positions on map:', worldState.humans.length, 'humans');
-
+            
             worldState.humans.forEach(human => {
                 const marker = document.createElement('div');
                 marker.className = `human-marker ${human.found ? 'human-found' : ''}`;
-
+                
                 // Convert world coordinates to map coordinates (800x800 world to 100% map)
                 // Ensure coordinates are within bounds
                 const x = Math.max(-400, Math.min(400, human.position[0]));
@@ -510,13 +510,13 @@
                 const mapX = ((x + 400) / 800) * 100;
                 // Flip Y-axis: what was bottom becomes top, top becomes bottom
                 const mapY = 100 - ((z + 400) / 800) * 100;
-
+                
                 marker.style.left = `${mapX}%`;
                 marker.style.top = `${mapY}%`;
-
+                
                 // Add tooltip with coordinates
                 marker.title = `${human.name} (${human.found ? 'Found' : 'Not Found'}) - [${human.position[0].toFixed(1)}, ${human.position[2].toFixed(1)}]`;
-
+                
                 // Use same color for all humans
                 marker.style.backgroundColor = '#ffd93d'; // Yellow for all humans
                 
