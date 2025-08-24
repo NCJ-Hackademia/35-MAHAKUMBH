@@ -43,7 +43,7 @@ We’re committed to the hackathon values of **innovation, integrity, and collab
 [![PyBullet](https://img.shields.io/badge/simulation-PyBullet-red)](https://pybullet.org)
 [![Stable Baselines3](https://img.shields.io/badge/RL-StableBaselines3-orange)](https://stable-baselines3.readthedocs.io/)
 
-## 🗃️ Overview
+## 🗃️ Project Workflow
 
 ![Flowchart](https://github.com/NCJ-Hackademia/35-MAHAKUMBH/blob/main/RL_TRAINING/assets/flowchart.jpeg)
 
