@@ -3,6 +3,8 @@ import json
 import websockets
 from datetime import datetime
 import random
+import threading
+from human_detection_email import HumanDetectionEmailer
 
 
 class MultiDroneServer:
@@ -22,6 +24,9 @@ class MultiDroneServer:
 
         # Generate 9 humans (3 per region)
         self.humans = self.generate_humans()
+
+        # Initialize email system
+        self.emailer = HumanDetectionEmailer()
 
     def generate_humans(self):
         humans = []
@@ -171,7 +176,33 @@ class MultiDroneServer:
                     human["found"] = True
                     humans_found.append(human)
 
+                    # Send email notification for human detection
+                    self.send_human_detection_email(human, drone_id, drone_pos)
+
         return humans_found
+
+    def send_human_detection_email(self, human, drone_id, drone_pos):
+        """Send email notification for human detection"""
+        try:
+            detection_data = {
+                'position': human['position'],
+                'drone_id': drone_id,
+                'timestamp': datetime.now().strftime('%H:%M:%S'),
+                'method': self.emailer.get_random_detection_method()  # Randomize detection method
+            }
+
+            # Send email in a separate thread to avoid blocking
+            def send_email_async():
+                self.emailer.send_human_detection_email(detection_data)
+
+            email_thread = threading.Thread(target=send_email_async)
+            email_thread.daemon = True
+            email_thread.start()
+
+            print(f"📧 Email notification queued for {human['name']} detected by {drone_id}")
+
+        except Exception as e:
+            print(f"❌ Failed to send email notification: {str(e)}")
 
     async def broadcast_positions(self):
         """Broadcast all drone positions to all clients"""
