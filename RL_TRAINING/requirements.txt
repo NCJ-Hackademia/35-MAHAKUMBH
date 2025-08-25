@@ -1,7 +1,0 @@
-gym
-numpy
-pybullet
-stable-baselines3[extra]
-torch
-shimmy
-tensorboard
